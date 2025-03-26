@@ -38,15 +38,17 @@ void DepthControl::dive(z_state_t * state, int currentTime_in) {
 }
 
 void DepthControl::surface(z_state_t * state) {
-  depth_des = 0;
+  depth_des = wayPoints[currentWayPoint];
   depth = state->z;
+  depth_error = depth - depth_des;
 
   String surfaceMessage = "";
   int smTime = 20;
   if (depth - depth_des < DEPTH_MARGIN || delayed) {
     atSurface = 1;
     complete = 1;
-    uV = 0;
+    uV = Kp*depth_error;
+    uV = min(-250, max(250, uV)); // can check the signs later on depending on motor
     surfaceMessage = "Got to surface. Finished Depth Control";
     smTime = 10;
   }
@@ -137,3 +139,4 @@ size_t DepthControl::writeDataBytes(unsigned char * buffer, size_t idx) {
   data_slot[2] = depth_des;
   return idx + 3*sizeof(float);
 }
+
